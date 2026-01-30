@@ -48,4 +48,5 @@ repos:
             - "pydantic-settings"
             - "asyncpg"
             - "sqlalchemy>=2.0.0"
+            - "fastapi"
           language_version: python3.13
