@@ -16,8 +16,7 @@ class Building(UUIDMixin, TimestampedMixin, Base):
     address = Column(String(255), nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
-
-    companies = relationship("Company", backref="building")
+    companies = relationship("Company", back_populates="building")
 
 
 class GeneralActivity(UUIDMixin, TimestampedMixin, Base):
@@ -26,7 +25,7 @@ class GeneralActivity(UUIDMixin, TimestampedMixin, Base):
     __tablename__ = "general_activity"
 
     title = Column(String(255), nullable=False)
-    activity_types = relationship("ActivityType", backref="general_activity")
+    activity_types = relationship("ActivityType", back_populates="general_activity")
 
 
 class ActivityType(UUIDMixin, TimestampedMixin, Base):
@@ -35,7 +34,7 @@ class ActivityType(UUIDMixin, TimestampedMixin, Base):
     __tablename__ = "activity_type"
 
     title = Column(String(255), nullable=False)
-    sub_activities = relationship("SubActivity", backref="activity_type")
+    sub_activities = relationship("SubActivity", back_populates="activity_type")
     general_activity_id = Column(UUID(as_uuid=True), ForeignKey("general_activity.id"))
     general_activity = relationship("GeneralActivity", back_populates="activity_types")
 
@@ -47,7 +46,7 @@ class SubActivity(UUIDMixin, TimestampedMixin, Base):
 
     title = Column(String(255), nullable=False)
     activity_type_id = Column(UUID(as_uuid=True), ForeignKey("activity_type.id"))
-    activity_type = relationship("ActivityType", back_populates="sub_activity")
+    activity_type = relationship("ActivityType", back_populates="sub_activities")
 
 
 class Company(UUIDMixin, TimestampedMixin, Base):
@@ -58,5 +57,4 @@ class Company(UUIDMixin, TimestampedMixin, Base):
     name = Column(String(255), nullable=False)
     phone = Column(String(255), nullable=False)
     building_id = Column(UUID(as_uuid=True), ForeignKey("building.id"))
-    building = relationship("Building", back_populates="company")
-    activities = relationship("Gene", back_populates="company")
+    building = relationship("Building", back_populates="companies")
