@@ -10,6 +10,8 @@ services:
     ports:
       - "8080:8080" # TODO убрать после добавления nginx
       - "443:443"
+    volumes:
+      - ./src/infrastructure/db/alembic/versions:/app/src/infrastructure/db/alembic/versions:delegated
     depends_on:
       - db
 
