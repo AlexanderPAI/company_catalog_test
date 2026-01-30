@@ -19,14 +19,16 @@ class EnvConfig(BaseSettings):
     )
 
     @property
-    def postgres_url(self) -> PostgresDsn:
-        return PostgresDsn.build(
-            scheme="postgresql+asyncpg",
-            username=self.postgres_user,
-            password=self.postgres_password,
-            host=self.postgres_host,
-            port=self.postgres_port,
-            path=f"{self.postgres_db}",
+    def postgres_url(self) -> str:
+        return str(
+            PostgresDsn.build(
+                scheme="postgresql+asyncpg",
+                username=self.postgres_user,
+                password=self.postgres_password,
+                host=self.postgres_host,
+                port=self.postgres_port,
+                path=f"{self.postgres_db}",
+            )
         )
 
 
