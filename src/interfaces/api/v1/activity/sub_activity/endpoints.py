@@ -9,14 +9,14 @@ from src.infrastructure.db.models.models import (  # ActivityType,; GeneralActiv
     SubActivity,
 )
 from src.infrastructure.repositories.db import DBRepository
-from src.interfaces.api.v1.activity.schemes import (  # ActivityTypeScheme,; GeneralActivityScheme,
+from src.interfaces.api.v1.activity.sub_activity.schemes import (  # ActivityTypeScheme,; GeneralActivityScheme,
     SubActivityScheme,
 )
 
-activity_router = APIRouter(prefix="/activity")
+sub_activity_router = APIRouter(prefix="/activity")
 
 
-@activity_router.post("/sub_activity", response_model=SubActivityScheme)
+@sub_activity_router.post("/sub_activity", response_model=SubActivityScheme)
 async def create_sub_activity(  # type: ignore
     sub_activity: SubActivityScheme,
     session: AsyncSession = Depends(get_session),
@@ -27,7 +27,7 @@ async def create_sub_activity(  # type: ignore
     return result
 
 
-@activity_router.get("/sub_activity/list", response_model=List[SubActivityScheme])
+@sub_activity_router.get("/sub_activity/list", response_model=List[SubActivityScheme])
 async def get_sub_activities(  # type: ignore
     session: AsyncSession = Depends(get_session),
 ):
@@ -37,7 +37,7 @@ async def get_sub_activities(  # type: ignore
     return result
 
 
-@activity_router.get("/sub_activity/{id}", response_model=SubActivityScheme)
+@sub_activity_router.get("/sub_activity/{id}", response_model=SubActivityScheme)
 async def get_sub_activity(  # type: ignore
     sub_activity_id: UUID, session: AsyncSession = Depends(get_session)
 ):
