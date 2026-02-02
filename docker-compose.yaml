@@ -21,7 +21,7 @@ services:
     ports:
       - "5432:5432" # TODO убрать после добавления nginx
     volumes:
-      - company_catalog_db:/var/lib/postgres/data:rw
+      - postgres_data:/var/lib/postgresql/data:rw
     env_file:
       - .env
     environment:
@@ -31,4 +31,4 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
 
 volumes:
-  company_catalog_db:
+  postgres_data:

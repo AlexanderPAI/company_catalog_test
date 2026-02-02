@@ -52,7 +52,12 @@ class DBRepository(Generic[ModelType]):
 
     async def list(self, *args: Any, **kwargs: Any) -> Sequence[ModelType]:
         """List entities from the database"""
-        obj_list = await self._session.execute(
-            select(self._model).filter(*args).filter_by(**kwargs)
-        )
+        statement = select(self._model)
+
+        if args:
+            statement = statement.filter(*args)
+        if kwargs:
+            statement = statement.filter_by(**kwargs)
+
+        obj_list = await self._session.execute(statement)
         return obj_list.scalars().all()
