@@ -7,14 +7,14 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from src.infrastructure.db.db_connector import get_session
 from src.infrastructure.db.models.models import Company
 from src.infrastructure.repositories.db import DBRepository
-from src.interfaces.api.v1.activity.schemes import GeneralActivityScheme
+from src.interfaces.api.v1.company.schemes import CompanyScheme
 
 company_router = APIRouter()
 
 
-@company_router.post("/company", response_model=GeneralActivityScheme)
+@company_router.post("/company", response_model=CompanyScheme)
 async def create_company(  # type: ignore
-    company: GeneralActivityScheme,
+    company: CompanyScheme,
     session: AsyncSession = Depends(get_session),
 ):
     """Create a new company"""
@@ -23,7 +23,7 @@ async def create_company(  # type: ignore
     return result
 
 
-@company_router.get("/company/list", response_model=List[Company])
+@company_router.get("/company/list", response_model=List[CompanyScheme])
 async def get_companies(  # type: ignore
     session: AsyncSession = Depends(get_session),
 ):
@@ -33,7 +33,7 @@ async def get_companies(  # type: ignore
     return result
 
 
-@company_router.get("/company/{id}", response_model=Company)
+@company_router.get("/company/{id}", response_model=CompanyScheme)
 async def get_company(company_id: UUID, session: AsyncSession = Depends(get_session)):  # type: ignore
     """Get a company"""
     db_repo = DBRepository(model=Company, session=session)

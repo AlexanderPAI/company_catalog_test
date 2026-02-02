@@ -7,7 +7,7 @@ from src.interfaces.api.v1.activity.schemes import GeneralActivityScheme
 from src.interfaces.api.v1.building.schemes import BuildingScheme
 
 
-class Company(BaseModel):
+class CompanyScheme(BaseModel):
     """Company scheme"""
 
     id: Optional[UUID] = Field(None, title="ID")
