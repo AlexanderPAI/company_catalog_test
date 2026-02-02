@@ -9,10 +9,10 @@ from src.infrastructure.db.models import models
 from src.infrastructure.repositories.db import DBRepository
 from src.interfaces.api.v1.schemes import Building
 
-v1_router = APIRouter(prefix="/v1")
+building_router = APIRouter(prefix="/building")
 
 
-@v1_router.post("/add_building", response_model=Building)
+@building_router.post("/add", response_model=Building)
 async def add_building(  # type: ignore
     building: Building, session: AsyncSession = Depends(get_session)
 ):
@@ -21,20 +21,15 @@ async def add_building(  # type: ignore
     return result
 
 
-@v1_router.get("/get_buildings", response_model=List[Building])
+@building_router.get("/list", response_model=List[Building])
 async def get_buildings(session: AsyncSession = Depends(get_session)):  # type: ignore
     db_repo = DBRepository(model=models.Building, session=session)
     result = await db_repo.list()
     return result
 
 
-@v1_router.get("/get_building/{id}", response_model=Building)
+@building_router.get("/get/{id}", response_model=Building)
 async def get_building(building_id: UUID, session: AsyncSession = Depends(get_session)):  # type: ignore
     db_repo = DBRepository(model=models.Building, session=session)
     result = await db_repo.get(id=building_id)
     return result
-
-
-@v1_router.get("/")
-def root() -> dict[str, str | int | float]:
-    return {"message": "working"}
