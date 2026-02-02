@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from src.domain import entities
@@ -6,10 +6,10 @@ from src.infrastructure.db.db_connector import get_session
 from src.infrastructure.db.models import models
 from src.infrastructure.repositories.db import DBRepository
 
-app = FastAPI()
+v1_router = APIRouter(prefix="/v1")
 
 
-@app.post("/add_building")
+@v1_router.post("/add_building")
 async def add_building(
     building: entities.Building, session: AsyncSession = Depends(get_session)
 ) -> entities.Building:
@@ -18,6 +18,6 @@ async def add_building(
     return result  # type: ignore
 
 
-@app.get("/")
+@v1_router.get("/")
 def root() -> dict[str, str | int | float]:
     return {"message": "working"}
