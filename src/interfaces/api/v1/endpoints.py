@@ -1,4 +1,5 @@
 from typing import List
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -24,6 +25,13 @@ async def add_building(  # type: ignore
 async def get_buildings(session: AsyncSession = Depends(get_session)):  # type: ignore
     db_repo = DBRepository(model=models.Building, session=session)
     result = await db_repo.list()
+    return result
+
+
+@v1_router.get("/get_building/{id}", response_model=Building)
+async def get_building(building_id: UUID, session: AsyncSession = Depends(get_session)):  # type: ignore
+    db_repo = DBRepository(model=models.Building, session=session)
+    result = await db_repo.get(id=building_id)
     return result
 
 
