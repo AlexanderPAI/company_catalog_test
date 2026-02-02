@@ -4,8 +4,8 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-class Building(BaseModel):
-    """Building entity"""
+class BuildingScheme(BaseModel):
+    """Building scheme"""
 
     id: Optional[UUID] = Field(None, title="Building ID")
     address: str = Field(..., title="Building address")

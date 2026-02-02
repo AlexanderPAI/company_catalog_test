@@ -12,14 +12,14 @@ class Building(BaseModel):
 
 
 class GeneralActivity(BaseModel):
-    """Activity type entity"""
+    """General activity entity"""
 
     title: str
     activity_types: List["ActivityType"]
 
 
 class ActivityType(BaseModel):
-    """Activity entity"""
+    """Activity type entity"""
 
     title: str
     sub_activities: List["SubActivity"]
