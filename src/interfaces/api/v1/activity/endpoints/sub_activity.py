@@ -5,15 +5,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from src.infrastructure.db.db_connector import get_session
-from src.infrastructure.db.models.models import (  # ActivityType,; GeneralActivity,
-    SubActivity,
-)
+from src.infrastructure.db.models.models import SubActivity
 from src.infrastructure.repositories.db import DBRepository
-from src.interfaces.api.v1.activity.sub_activity.schemes import (  # ActivityTypeScheme,; GeneralActivityScheme,
-    SubActivityScheme,
-)
+from src.interfaces.api.v1.activity.schemes import SubActivityScheme
 
-sub_activity_router = APIRouter(prefix="/activity")
+sub_activity_router = APIRouter()
 
 
 @sub_activity_router.post("/sub_activity", response_model=SubActivityScheme)
