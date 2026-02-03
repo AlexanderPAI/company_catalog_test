@@ -17,6 +17,7 @@ async def get_company_by_building(  # type: ignore
     address: str,
     session: AsyncSession = Depends(get_session),
 ):
+    """Get Company by Building"""
     building_db_repo = DBRepository(model=Building, session=session)
     building = await building_db_repo.get(address=address)
     if not building:
@@ -32,8 +33,20 @@ async def get_company_by_uuid(  # type: ignore
     company_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
 ):
+    """Get Company by ID"""
     db_repo = DBRepository(model=Company, session=session)
     company = await db_repo.get(id=company_id)
+    return company
+
+
+@router.get("/company/get_by_name", response_model=CompanyScheme)
+async def get_company_by_name(  # type: ignore
+    name: str,
+    session: AsyncSession = Depends(get_session),
+):
+    """Get Company by Name"""
+    db_repo = DBRepository(model=Company, session=session)
+    company = await db_repo.get(name=name)
     return company
 
 
