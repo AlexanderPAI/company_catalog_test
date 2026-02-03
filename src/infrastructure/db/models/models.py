@@ -47,8 +47,16 @@ class Company(Base, UUIDMixin, TimestampedMixin):
     phones: Mapped[List["Phone"]] = relationship(
         "Phone", back_populates="company", cascade="all, delete-orphan", lazy="selectin"
     )
-    company_activities: Mapped[List["CompanyActivity"]] = relationship(
+    company_activity: Mapped[List["CompanyActivity"]] = relationship(
         "CompanyActivity", back_populates="company", lazy="selectin"
+    )
+    company_sub_activities: Mapped[List["CompanySubActivity"]] = relationship(
+        "CompanySubActivity", back_populates="company", lazy="selectin"
+    )
+    company_double_sub_activities: Mapped[List["CompanyDoubleSubActivity"]] = (
+        relationship(
+            "CompanyDoubleSubActivity", back_populates="company", lazy="selectin"
+        )
     )
 
 
@@ -64,7 +72,7 @@ class Activity(Base, UUIDMixin):
         lazy="selectin",
     )
     company_activities: Mapped[List["CompanyActivity"]] = relationship(
-        "CompanyActivity", back_populates="activity"
+        "CompanyActivity", back_populates="activity", lazy="selectin"
     )
 
 
@@ -80,7 +88,13 @@ class SubActivity(Base, UUIDMixin):
     double_sub_activities: Mapped[List["DoubleSubActivity"]] = relationship(
         "DoubleSubActivity",
         back_populates="sub_activity",
-        cascade="all, delete, delete-orphan",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    company_sub_activities: Mapped[List["CompanySubActivity"]] = relationship(
+        "CompanySubActivity",
+        back_populates="sub_activity",
         lazy="selectin",
     )
 
@@ -93,6 +107,13 @@ class DoubleSubActivity(Base, UUIDMixin):
     sub_activity_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sub_activities.id"))
     sub_activity: Mapped["SubActivity"] = relationship(
         "SubActivity", back_populates="double_sub_activities"
+    )
+    company_double_sub_activities: Mapped[List["CompanyDoubleSubActivity"]] = (
+        relationship(
+            "CompanyDoubleSubActivity",
+            back_populates="double_sub_activity",
+            lazy="selectin",
+        )
     )
 
 
@@ -107,8 +128,46 @@ class CompanyActivity(Base, UUIDMixin):
         ForeignKey("activities.id"), primary_key=True
     )
     company: Mapped["Company"] = relationship(
-        "Company", back_populates="company_activities", lazy="selectin"
+        "Company", back_populates="company_activity", lazy="selectin"
     )
     activity: Mapped["Activity"] = relationship(
         "Activity", back_populates="company_activities", lazy="selectin"
+    )
+
+
+class CompanySubActivity(Base, UUIDMixin):
+    """Company sub_activity for m2m relationship"""
+
+    __tablename__ = "company_sub_activities"
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id"), primary_key=True
+    )
+    sub_activity_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("sub_activities.id"), primary_key=True
+    )
+    company: Mapped["Company"] = relationship(
+        "Company", back_populates="company_sub_activities", lazy="selectin"
+    )
+    sub_activity: Mapped["SubActivity"] = relationship(
+        "SubActivity", back_populates="company_sub_activities", lazy="selectin"
+    )
+
+
+class CompanyDoubleSubActivity(Base, UUIDMixin):
+    """Company double_sub_activity for m2m relationship"""
+
+    __tablename__ = "company_double_sub_activities"
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id"), primary_key=True
+    )
+    double_sub_activity_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("double_sub_activities.id"), primary_key=True
+    )
+    company: Mapped["Company"] = relationship(
+        "Company", back_populates="company_double_sub_activities", lazy="selectin"
+    )
+    double_sub_activity: Mapped["DoubleSubActivity"] = relationship(
+        "DoubleSubActivity",
+        back_populates="company_double_sub_activities",
+        lazy="selectin",
     )
