@@ -45,7 +45,9 @@ class Company(Base, UUIDMixin, TimestampedMixin):
     phones: Mapped[List["Phone"]] = relationship(
         "Phone", back_populates="company", cascade="all, delete-orphan"
     )
-    # activities
+    company_activities: Mapped[List["CompanyActivity"]] = relationship(
+        "CompanyActivity", back_populates="company"
+    )
 
 
 class Activity(Base, UUIDMixin):
@@ -55,6 +57,9 @@ class Activity(Base, UUIDMixin):
     title: Mapped[str] = mapped_column("title", nullable=False)
     sub_activities: Mapped[List["SubActivity"]] = relationship(
         "SubActivity", back_populates="activity", cascade="all, delete-orphan"
+    )
+    company_activities: Mapped[List["CompanyActivity"]] = relationship(
+        "CompanyActivity", back_populates="activity"
     )
 
 
@@ -83,4 +88,22 @@ class DoubleSubActivity(Base, UUIDMixin):
     sub_activity: Mapped["SubActivity"] = relationship(
         "SubActivity",
         back_populates="double_sub_activities",
+    )
+
+
+class CompanyActivity(Base, UUIDMixin):
+    """Company activity for m2m relationship"""
+
+    __tablename__ = "company_activities"
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id"), primary_key=True
+    )
+    activity_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("activities.id"), primary_key=True
+    )
+    company: Mapped["Company"] = relationship(
+        "Company", back_populates="company_activities"
+    )
+    activity: Mapped["Activity"] = relationship(
+        "Activity", back_populates="company_activities"
     )
