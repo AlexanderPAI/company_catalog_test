@@ -41,12 +41,14 @@ class Company(Base, UUIDMixin, TimestampedMixin):
     __tablename__ = "companies"
     name: Mapped[str] = mapped_column("name", nullable=False)
     building_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("buildings.id"))
-    building: Mapped["Building"] = relationship("Building", back_populates="companies")
+    building: Mapped["Building"] = relationship(
+        "Building", back_populates="companies", lazy="selectin"
+    )
     phones: Mapped[List["Phone"]] = relationship(
-        "Phone", back_populates="company", cascade="all, delete-orphan"
+        "Phone", back_populates="company", cascade="all, delete-orphan", lazy="selectin"
     )
     company_activities: Mapped[List["CompanyActivity"]] = relationship(
-        "CompanyActivity", back_populates="company"
+        "CompanyActivity", back_populates="company", lazy="selectin"
     )
 
 
