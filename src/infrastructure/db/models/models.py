@@ -58,7 +58,10 @@ class Activity(Base, UUIDMixin):
     __tablename__ = "activities"
     title: Mapped[str] = mapped_column("title", nullable=False)
     sub_activities: Mapped[List["SubActivity"]] = relationship(
-        "SubActivity", back_populates="activity", cascade="all, delete-orphan"
+        "SubActivity",
+        back_populates="activity",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
     company_activities: Mapped[List["CompanyActivity"]] = relationship(
         "CompanyActivity", back_populates="activity"
@@ -78,6 +81,7 @@ class SubActivity(Base, UUIDMixin):
         "DoubleSubActivity",
         back_populates="sub_activity",
         cascade="all, delete, delete-orphan",
+        lazy="selectin",
     )
 
 
@@ -88,8 +92,7 @@ class DoubleSubActivity(Base, UUIDMixin):
     title: Mapped[str] = mapped_column("title", nullable=False)
     sub_activity_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sub_activities.id"))
     sub_activity: Mapped["SubActivity"] = relationship(
-        "SubActivity",
-        back_populates="double_sub_activities",
+        "SubActivity", back_populates="double_sub_activities"
     )
 
 
@@ -104,8 +107,8 @@ class CompanyActivity(Base, UUIDMixin):
         ForeignKey("activities.id"), primary_key=True
     )
     company: Mapped["Company"] = relationship(
-        "Company", back_populates="company_activities"
+        "Company", back_populates="company_activities", lazy="selectin"
     )
     activity: Mapped["Activity"] = relationship(
-        "Activity", back_populates="company_activities"
+        "Activity", back_populates="company_activities", lazy="selectin"
     )
