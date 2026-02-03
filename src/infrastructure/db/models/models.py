@@ -1,60 +1,86 @@
-from sqlalchemy import UUID, Column, Float, ForeignKey, String
-from sqlalchemy.orm import DeclarativeBase, relationship
+import uuid
+from typing import List
+
+from sqlalchemy import ForeignKey
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.infrastructure.db.models.mixins import TimestampedMixin, UUIDMixin
 
 
-class Base(DeclarativeBase):
-    pass
+class Base(AsyncAttrs, DeclarativeBase):
+    """Base model"""
+
+    __abstract__ = True
 
 
-class Building(UUIDMixin, TimestampedMixin, Base):
-    """Building table"""
+class Building(Base, UUIDMixin, TimestampedMixin):
+    """Building entity"""
 
-    __tablename__ = "building"
-
-    address = Column(String(255), nullable=False)
-    latitude = Column(Float, nullable=False)
-    longitude = Column(Float, nullable=False)
-    companies = relationship("Company", back_populates="building")
-
-
-class GeneralActivity(UUIDMixin, TimestampedMixin, Base):
-    """General activity table"""
-
-    __tablename__ = "general_activity"
-
-    title = Column(String(255), nullable=False)
-    activity_types = relationship("ActivityType", back_populates="general_activity")
+    __tablename__ = "buildings"
+    address: Mapped[str] = mapped_column("address", nullable=False)
+    latitude: Mapped[float] = mapped_column("latitude", nullable=False)
+    longitude: Mapped[float] = mapped_column("longitude", nullable=False)
+    companies: Mapped[List["Company"]] = relationship(
+        "Company", back_populates="building"
+    )
 
 
-class ActivityType(UUIDMixin, TimestampedMixin, Base):
-    """Activity type table"""
+class Phone(Base, UUIDMixin):
+    """Phone entity"""
 
-    __tablename__ = "activity_type"
-
-    title = Column(String(255), nullable=False)
-    sub_activities = relationship("SubActivity", back_populates="activity_type")
-    general_activity_id = Column(UUID(as_uuid=True), ForeignKey("general_activity.id"))
-    general_activity = relationship("GeneralActivity", back_populates="activity_types")
+    __tablename__ = "phones"
+    phone: Mapped[str] = mapped_column("phone", nullable=False)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"))
+    company: Mapped["Company"] = relationship("Company", back_populates="phones")
 
 
-class SubActivity(UUIDMixin, TimestampedMixin, Base):
-    """Sub activity table"""
+class Company(Base, UUIDMixin, TimestampedMixin):
+    """Company entity"""
 
-    __tablename__ = "sub_activity"
+    __tablename__ = "companies"
+    name: Mapped[str] = mapped_column("name", nullable=False)
+    building_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("buildings.id"))
+    building: Mapped["Building"] = relationship("Building", back_populates="companies")
+    phones: Mapped[List["Phone"]] = relationship(
+        "Phone", back_populates="company", cascade="all, delete-orphan"
+    )
+    # activities
 
-    title = Column(String(255), nullable=False)
-    activity_type_id = Column(UUID(as_uuid=True), ForeignKey("activity_type.id"))
-    activity_type = relationship("ActivityType", back_populates="sub_activities")
+
+class Activity(Base, UUIDMixin):
+    """Activity entity"""
+
+    __tablename__ = "activities"
+    title: Mapped[str] = mapped_column("title", nullable=False)
+    sub_activities: Mapped[List["SubActivity"]] = relationship(
+        "SubActivity", back_populates="activity", cascade="all, delete-orphan"
+    )
 
 
-class Company(UUIDMixin, TimestampedMixin, Base):
-    """Company table"""
+class SubActivity(Base, UUIDMixin):
+    """Sub activity entity"""
 
-    __tablename__ = "company"
+    __tablename__ = "sub_activities"
+    title: Mapped[str] = mapped_column("title", nullable=False)
+    activity_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("activities.id"))
+    activity: Mapped["Activity"] = relationship(
+        "Activity", back_populates="sub_activities"
+    )
+    double_sub_activities: Mapped[List["DoubleSubActivity"]] = relationship(
+        "DoubleSubActivity",
+        back_populates="sub_activity",
+        cascade="all, delete, delete-orphan",
+    )
 
-    name = Column(String(255), nullable=False)
-    phone = Column(String(255), nullable=False)
-    building_id = Column(UUID(as_uuid=True), ForeignKey("building.id"))
-    building = relationship("Building", back_populates="companies")
+
+class DoubleSubActivity(Base, UUIDMixin):
+    """Double sub activity entity"""
+
+    __tablename__ = "double_sub_activities"
+    title: Mapped[str] = mapped_column("title", nullable=False)
+    sub_activity_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sub_activities.id"))
+    sub_activity: Mapped["SubActivity"] = relationship(
+        "SubActivity",
+        back_populates="double_sub_activities",
+    )
