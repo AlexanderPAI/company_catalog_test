@@ -1,3 +1,4 @@
+import uuid
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -24,6 +25,16 @@ async def get_company_by_building(  # type: ignore
     company_db_repo = DBRepository(model=Company, session=session)
     companies = await company_db_repo.list(building_id=building.id)
     return companies
+
+
+@router.get("/company/get_by_id", response_model=CompanyScheme)
+async def get_company_by_uuid(  # type: ignore
+    company_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session),
+):
+    db_repo = DBRepository(model=Company, session=session)
+    company = await db_repo.get(id=company_id)
+    return company
 
 
 @router.get(

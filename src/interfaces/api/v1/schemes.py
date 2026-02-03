@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -7,6 +8,7 @@ class CompanyScheme(BaseModel):
     """Company scheme"""
 
     model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID = Field(..., title="ID")
     name: str = Field(..., title="Company Name")
     building: "BuildingScheme" = Field(..., title="Company Building")
     phones: Optional[List["PhoneScheme"]] = Field(None, title="Company Phones")
