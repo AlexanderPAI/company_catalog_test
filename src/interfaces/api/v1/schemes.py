@@ -12,7 +12,7 @@ class CompanyScheme(BaseModel):
     name: str = Field(..., title="Company Name")
     building: "BuildingScheme" = Field(..., title="Company Building")
     phones: Optional[List["PhoneScheme"]] = Field(None, title="Company Phones")
-    company_activities: Optional[List["CompanyActivityScheme"]] = Field(
+    company_activities: Optional[List["CompanyDoubleSubActivityScheme"]] = Field(
         ..., title="Company Activities"
     )
 
@@ -60,8 +60,8 @@ class ActivityScheme(BaseModel):
     )
 
 
-class CompanyActivityScheme(BaseModel):
+class CompanyDoubleSubActivityScheme(BaseModel):
     """Company activity scheme"""
 
     model_config = ConfigDict(from_attributes=True)
-    activity: ActivityScheme = Field(..., title="Activities")
+    double_sub_activity: DoubleSubActivityScheme = Field(..., title="Activity")
