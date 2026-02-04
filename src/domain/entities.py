@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -41,8 +41,8 @@ class Company(BaseModel):
     """Company entity"""
 
     name: str
-    phones: List[Phone]
+    phones: Optional[List[Phone]] = []
     building: Building
-    activities: List[Activity]
-    sub_activities: List[SubActivity]
-    double_sub_activities: List[DoubleSubActivity]
+    activities: Optional[List[Activity]] = []
+    sub_activities: Optional[List[SubActivity]] = []
+    double_sub_activities: Optional[List[DoubleSubActivity]] = []
