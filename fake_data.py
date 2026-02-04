@@ -1,0 +1,513 @@
+import asyncio
+import os
+import random
+
+# import random
+from typing import Dict, List
+
+from dotenv import load_dotenv
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from src.infrastructure.db.models import models
+
+load_dotenv()
+
+
+buildings_data: List[List[str | float]] = [
+    ["Москва, ул. Братиславская, 16 к 1", 55.657713, 37.769426],
+    ["Москва, Кутузовский проспект, 32", 55.739942, 37.529206],
+    ["Москва, ул. Широкая, 24/25", 55.824915, 37.451726],
+    ["Москва, ул. Братиславская, 15 к 1", 55.657843, 37.767875],
+    ["Москва, ул. Госпитальный вал, д.3", 55.777162, 37.703207],
+]
+
+phones_data = [
+    "+7 (916) 472 85 31",
+    "+7 (903) 159 64 72",
+    "+7 (926) 883 25 49",
+    "+7 (916) 734 19 60",
+    "+7 (903) 206 58 97",
+    "+7 (926) 541 37 82",
+    "+7 (916) 928 63 05",
+    "+7 (903) 675 24 91",
+    "+7 (926) 309 74 16",
+    "+7 (916) 186 52 43",
+    "+7 (903) 437 89 20",
+    "+7 (926) 952 10 68",
+    "+7 (916) 623 95 07",
+    "+7 (903) 781 36 54",
+    "+7 (926) 248 73 19",
+    "+7 (916) 895 41 26",
+    "+7 (903) 364 02 85",
+    "+7 (926) 517 68 93",
+    "+7 (916) 039 87 24",
+    "+7 (903) 672 15 48",
+]
+
+activities_data = {
+    "Розничная торговля": {
+        "Торговля продовольственными товарами": [
+            "Гастрономы и супермаркеты",
+            "Продуктовые магазины у дома",
+            "Специализированные магазины продуктов",
+        ],
+        "Торговля непродовольственными товарами": [
+            "Универмаги и торговые центры",
+            "Специализированные непродовольственные магазины",
+            "Сетевые магазины непродовольственных товаров",
+        ],
+        "Интернет-торговля (розничная)": [
+            "Интернет-магазины с доставкой",
+            "Онлайн-платформы для продажи товаров",
+            "Социальные сети как каналы продаж",
+        ],
+        "Торговля через вендинговые аппараты": [
+            "Аппараты по продаже кофе и напитков",
+            "Аппараты по продаже снеков и сладостей",
+            "Специализированные вендинговые аппараты",
+        ],
+        "Сезонная и ярмарочная торговля": [
+            "Рождественские и новогодние базары",
+            "Сельскохозяйственные ярмарки",
+            "Сезонные летние рынки",
+        ],
+        "Торговля в павильонах и киосках": [
+            "Газетно-журнальные киоски",
+            "Цветочные павильоны и киоски",
+            "Киоски с сопутствующими товарами",
+        ],
+        "Комиссионная торговля (second-hand)": [
+            "Секонд-хенды одежды",
+            "Комиссионные магазины техники",
+            "Винтажные и антикварные лавки",
+        ],
+        "Торговля товарами для дома и интерьера": [
+            "Магазины мебели",
+            "Магазины товаров для интерьера",
+            "Строительные и отделочные материалы",
+        ],
+        "Торговля электроникой и бытовой техникой": [
+            "Специализированные магазины электроники",
+            "Торговые точки бытовой техники",
+            "Магазины цифровой техники",
+        ],
+        "Торговля одеждой, обувью и аксессуарами": [
+            "Бутики и магазины одежды",
+            "Обувные магазины",
+            "Магазины аксессуаров и сумок",
+        ],
+    },
+    "Производство одежды": {
+        "Производство верхней одежды (пальто, куртки)": [
+            "Пошив зимних пальто",
+            "Производство демисезонных курток",
+            "Изготовление плащей и тренчей",
+        ],
+        "Производство повседневной одежды (футболки, джинсы)": [
+            "Производство базовых футболок",
+            "Пошив джинсовой одежды",
+            "Изготовление худи и свитшотов",
+        ],
+        "Производство деловой одежды (костюмы, блузки)": [
+            "Пошив мужских костюмов",
+            "Производство женских блузок",
+            "Изготовление офисных платьев",
+        ],
+        "Производство спортивной одежды": [
+            "Производство фитнес-одежды",
+            "Пошив спортивных костюмов",
+            "Изготовление термобелья",
+        ],
+        "Производство специализированной одежды (рабочая, медицинская)": [
+            "Пошив рабочей униформы",
+            "Производство медицинских халатов",
+            "Изготовление защитной одежды",
+        ],
+        "Производство детской одежды": [
+            "Производство одежды для новорожденных",
+            "Пошив детской повседневной одежды",
+            "Изготовление школьной формы",
+        ],
+        "Производство одежды из кожи и меха": [
+            "Пошив кожаных курток",
+            "Производство меховых изделий",
+            "Изготовление кожаных аксессуаров",
+        ],
+        "Производство трикотажных изделий": [
+            "Производство вязаных свитеров",
+            "Пошив трикотажных платьев",
+            "Изготовление трикотажных кофт",
+        ],
+        "Производство чулочно-носочных изделий": [
+            "Производство носков",
+            "Изготовление колготок и чулок",
+            "Пошив гольфов и гетр",
+        ],
+        "Пошив одежды на заказ (ателье)": [
+            "Индивидуальный пошив костюмов",
+            "Ателье по перешиву одежды",
+            "Мастерские по ремонту одежды",
+        ],
+    },
+    "Услуги общепита": {
+        "Рестораны": [
+            "Рестораны высокой кухни",
+            "Семейные рестораны",
+            "Тематические рестораны",
+        ],
+        "Кафе и кофейни": [
+            "Кофейни специализированные",
+            "Кондитерские-кафе",
+            "Буфеты и закусочные кафе",
+        ],
+        "Бары и пабы": ["Спортивные бары", "Коктейль-бары", "Пивные пабы"],
+        "Столовые и буфеты": [
+            "Рабочие столовые",
+            "Студенческие столовые",
+            "Буфеты в учреждениях",
+        ],
+        "Фаст-фуд и закусочные": [
+            "Бургерные",
+            "Пиццерии быстрого питания",
+            "Закусочные с сэндвичами",
+        ],
+        "Доставка готовой еды": [
+            "Службы доставки ресторанной еды",
+            "Кулинарии с доставкой",
+            "Сервисы доставки обедов",
+        ],
+        "Кейтеринг (выездное обслуживание)": [
+            "Кейтеринг для мероприятий",
+            "Выездное обслуживание корпоративов",
+            "Обслуживание свадеб и праздников",
+        ],
+        "Кондитерские и пекарни": [
+            "Пекарни хлебобулочных изделий",
+            "Кондитерские тортов и пирожных",
+            "Магазины десертов",
+        ],
+        "Фуд-корты и фуд-траки": [
+            "Фуд-траки мобильные",
+            "Стационарные фуд-корты",
+            "Передвижные точки питания",
+        ],
+        "Предприятия быстрого питания": [
+            "Сетевые фаст-фуды",
+            "Локальные заведения быстрого питания",
+            "Специализированные fast-food",
+        ],
+    },
+    "Разработка ПО": {
+        "Разработка мобильных приложений": [
+            "Разработка под iOS",
+            "Разработка под Android",
+            "Кроссплатформенная разработка",
+        ],
+        "Веб-разработка": [
+            "Frontend разработка",
+            "Backend разработка",
+            "Fullstack разработка",
+        ],
+        "Разработка десктопного ПО": [
+            "Разработка для Windows",
+            "Разработка для macOS",
+            "Разработка для Linux",
+        ],
+        "Разработка игр": [
+            "Разработка мобильных игр",
+            "Создание компьютерных игр",
+            "Разработка браузерных игр",
+        ],
+        "Разработка встроенного ПО (Embedded)": [
+            "Программирование микроконтроллеров",
+            "Разработка для IoT устройств",
+            "Встроенные системы для промышленности",
+        ],
+        "Разработка ERP и CRM систем": [
+            "Внедрение ERP систем",
+            "Разработка CRM платформ",
+            "Кастомизация бизнес-систем",
+        ],
+        "Разработка FinTech решений": [
+            "Платежные системы",
+            "Банковское ПО",
+            "Инвестиционные платформы",
+        ],
+        "Разработка медицинского ПО": [
+            "Электронные медкарты",
+            "Диагностические системы",
+            "Телемедицинские платформы",
+        ],
+        "Разработка образовательных платформ": [
+            "Системы дистанционного обучения",
+            "Образовательные порталы",
+            "Платформы для онлайн-курсов",
+        ],
+        "Разработка IoT решений": [
+            "Умный дом",
+            "Промышленный IoT",
+            "Носимые устройства",
+        ],
+    },
+    "Перевозки": {
+        "Пассажирские перевозки (такси)": [
+            "Классическое такси",
+            "Каршеринг и карпулинг",
+            "Заказные пассажирские перевозки",
+        ],
+        "Грузовые перевозки": [
+            "Местные грузоперевозки",
+            "Междугородные грузоперевозки",
+            "Перевозки сборных грузов",
+        ],
+        "Междугородные и международные перевозки": [
+            "Автобусные перевозки",
+            "Железнодорожные перевозки",
+            "Авиаперевозки грузов",
+        ],
+        "Курьерские услуги и доставка": [
+            "Курьерская доставка документов",
+            "Доставка товаров из интернет-магазинов",
+            "Экспресс-доставка",
+        ],
+        "Перевозки спецтехники и негабарита": [
+            "Перевозка строительной техники",
+            "Транспортировка промышленного оборудования",
+            "Перевозка крупногабаритных грузов",
+        ],
+        "Аренда транспорта с водителем": [
+            "Аренда легковых автомобилей с водителем",
+            "Аренда автобусов с водителем",
+            "Аренда спецтехники с оператором",
+        ],
+        "Перевозки опасных грузов": [
+            "Перевозка горючих материалов",
+            "Транспортировка химических веществ",
+            "Перевозка радиоактивных материалов",
+        ],
+        "Транспортно-экспедиционные услуги": [
+            "Таможенное оформление грузов",
+            "Организация мультимодальных перевозок",
+            "Экспедирование международных грузов",
+        ],
+        "Перевозки в сфере туризма": [
+            "Туристические автобусные перевозки",
+            "Трансферы для туристов",
+            "Аренда транспорта для экскурсий",
+        ],
+        "Перевозки для организаций (корпоративный транспорт)": [
+            "Служебный транспорт компаний",
+            "Доставка сотрудников на работу",
+            "Корпоративные перевозки для мероприятий",
+        ],
+    },
+}
+
+
+companies_data = [
+    'ООО "Аквилон"',
+    'ООО "ТрейдМастер"',
+    'АО "Тринити"',
+    'ООО "Техноимпульс"',
+    'ЗАО "Горизонт"',
+    'ООО "Вектор-Сервис"',
+    'АО "СтройИнвестГрупп"',
+    'ООО "МеталлПромСнаб"',
+    'ООО "ФармКонтракт"',
+    'ООО "ЛогистикПрофи"',
+    'ООО "ЭнергоСистемы"',
+    'АО "НефтеГазСервис"',
+    'ООО "АгроПромКомплекс"',
+    'ЗАО "ТелекомСвязь"',
+    'ООО "СтройМатериалыПлюс"',
+    'АО "МедицинскиеТехнологии"',
+    'ООО "ИТ-Решения"',
+    'ООО "ТранспортныеСистемы"',
+    'АО "ФинансовыйКонсалтинг"',
+    'ООО "ПищевыеТехнологии"',
+    'ЗАО "ЭкоПром"',
+    'ООО "БытовыеУслуги"',
+    'АО "СтраховаяГруппа"',
+    'ООО "РозничныеСети"',
+    'ООО "ПроизводственныеРесурсы"',
+    'АО "НаучныеРазработки"',
+    'ООО "СпортивныеТехнологии"',
+    'ЗАО "ТуристическиеУслуги"',
+    'ООО "МебельныеКомплексы"',
+    'АО "ОбразовательныеПроекты"',
+]
+
+
+async def create_fake_buildings(
+    buildings_data: List[List[str | float]], session: AsyncSession
+) -> None:
+    """Create fake buildings"""
+    buildings: List[models.Building] = []
+    for building in buildings_data:
+        buildings.append(
+            models.Building(
+                address=building[0],
+                latitude=building[1],
+                longitude=building[2],
+            )
+        )
+    for building_model in buildings:
+        session.add(building_model)
+    await session.commit()
+
+
+async def create_fake_activities(
+    activities_data: Dict[str, Dict[str, List[str]]], session: AsyncSession
+) -> None:
+    """Create fake activities"""
+
+    for activity, sub_activity_dict in activities_data.items():
+        activity_model = models.Activity(title=activity)
+        session.add(activity_model)
+        await session.flush()
+
+        for sub_activity, double_sub_activity_list in sub_activity_dict.items():
+            sub_activity_model = models.SubActivity(
+                title=sub_activity,
+                activity_id=activity_model.id,
+            )
+            session.add(sub_activity_model)
+            await session.flush()
+
+            for double_sub_activity in double_sub_activity_list:
+                double_sub_activity_model = models.DoubleSubActivity(
+                    title=double_sub_activity,
+                    sub_activity_id=sub_activity_model.id,
+                )
+                session.add(double_sub_activity_model)
+                await session.flush()
+    await session.commit()
+
+
+async def create_fake_companies(
+    companies_data: List[str], session: AsyncSession
+) -> None:
+    """Create fake companies"""
+    buildings = await session.execute(select(models.Building))
+    buildings = buildings.scalars().all()  # type: ignore
+
+    # Activity level 1
+    for company in companies_data[:10]:
+        activities = await session.execute(select(models.Activity))
+        activities = activities.scalars().all()  # type: ignore
+
+        activity = random.choice(activities)  # type: ignore
+        sub_activity = random.choice(activity.sub_activities)
+        double_sub_activity = random.choice(sub_activity.double_sub_activities)
+
+        company_model = models.Company(
+            name=company,
+            building_id=random.choice(buildings).id,  # type: ignore
+        )
+        session.add(company_model)
+        await session.flush()
+
+        company_activity_model = models.CompanyActivity(
+            company_id=company_model.id,
+            activity_id=activity.id,
+        )
+        session.add(company_activity_model)
+        await session.flush()
+
+        company_sub_activity_model = models.CompanySubActivity(
+            company_id=company_model.id,
+            sub_activity_id=sub_activity.id,
+        )
+        session.add(company_sub_activity_model)
+        await session.flush()
+
+        company_double_sub_activity_model = models.CompanyDoubleSubActivity(
+            company_id=company_model.id,
+            double_sub_activity_id=double_sub_activity.id,
+        )
+        session.add(company_double_sub_activity_model)
+        await session.flush()
+
+    # Sub Activity level
+    for company in companies_data[10:20]:
+        sub_activities = await session.execute(select(models.SubActivity))
+        sub_activities = sub_activities.scalars().all()  # type: ignore
+
+        sub_activity = random.choice(sub_activities)  # type: ignore
+        double_sub_activity = random.choice(sub_activity.double_sub_activities)
+
+        company_model = models.Company(
+            name=company,
+            building_id=random.choice(buildings).id,  # type: ignore
+        )
+        session.add(company_model)
+        await session.flush()
+
+        company_sub_activity_model = models.CompanySubActivity(
+            company_id=company_model.id,
+            sub_activity_id=sub_activity.id,
+        )
+        session.add(company_sub_activity_model)
+        await session.flush()
+
+        company_double_sub_activity_model = models.CompanyDoubleSubActivity(
+            company_id=company_model.id,
+            double_sub_activity_id=double_sub_activity.id,
+        )
+        session.add(company_double_sub_activity_model)
+        await session.flush()
+
+    # Double Sub Level
+    for company in companies_data[20:30]:
+
+        double_sub_activities = await session.execute(select(models.DoubleSubActivity))
+        double_sub_activities = double_sub_activities.scalars().all()  # type: ignore
+
+        double_sub_activity = random.choice(double_sub_activities)  # type: ignore
+
+        company_model = models.Company(
+            name=company,
+            building_id=random.choice(buildings).id,  # type: ignore
+        )
+        session.add(company_model)
+        await session.flush()
+
+        company_double_sub_activity_model = models.CompanyDoubleSubActivity(
+            company_id=company_model.id,
+            double_sub_activity_id=double_sub_activity.id,
+        )
+        session.add(company_double_sub_activity_model)
+        await session.flush()
+
+    await session.commit()
+
+
+async def create_fake_phones(phones_data: List[str], session: AsyncSession) -> None:
+    """Create fake phones"""
+    companies = await session.execute(select(models.Company))
+    companies = companies.scalars().all()  # type: ignore
+    for company in companies:
+        phone_model = models.Phone(
+            phone=random.choice(phones_data),
+            company_id=company.id,
+        )
+        session.add(phone_model)
+    await session.commit()
+
+
+async def main() -> None:
+    DATABASE_URL = os.environ["DATABASE_URL"]
+    engine = create_async_engine(DATABASE_URL)
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    async with async_session() as session:
+        await create_fake_buildings(buildings_data, session)
+        await create_fake_activities(activities_data, session)
+        await create_fake_companies(companies_data, session)
+        await create_fake_phones(phones_data, session)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

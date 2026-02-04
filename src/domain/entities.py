@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -11,30 +11,38 @@ class Building(BaseModel):
     longitude: float
 
 
-class GeneralActivity(BaseModel):
-    """General activity entity"""
-
-    title: str
-    activity_types: List["ActivityType"]
-
-
-class ActivityType(BaseModel):
-    """Activity type entity"""
+class Activity(BaseModel):
+    """Activity entity"""
 
     title: str
     sub_activities: List["SubActivity"]
 
 
 class SubActivity(BaseModel):
+    """SubActivity entity"""
+
+    title: str
+    double_sub_activities: List["DoubleSubActivity"]
+
+
+class DoubleSubActivity(BaseModel):
     """Sub Activity entity"""
 
     title: str
+
+
+class Phone(BaseModel):
+    """Phone entity"""
+
+    phone: str
 
 
 class Company(BaseModel):
     """Company entity"""
 
     name: str
-    phone_number: List[str]
+    phones: Optional[List[Phone]] = []
     building: Building
-    activity_type: List[ActivityType]
+    activities: Optional[List[Activity]] = []
+    sub_activities: Optional[List[SubActivity]] = []
+    double_sub_activities: Optional[List[DoubleSubActivity]] = []
