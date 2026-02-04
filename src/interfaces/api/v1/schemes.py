@@ -13,7 +13,7 @@ class CompanyScheme(BaseModel):
     name: str = Field(..., title="Company Name")
     building: "BuildingScheme" = Field(..., title="Company Building")
     phones: Optional[List["PhoneScheme"]] = Field(None, title="Company Phones")
-    company_activities: Optional[List["CompanyDoubleSubActivityScheme"]] = Field(
+    company_activities: Optional[List["CompanyActivityScheme"]] = Field(
         None, title="Company Activities"
     )
     company_sub_activities: Optional[List["CompanySubActivityScheme"]] = Field(
