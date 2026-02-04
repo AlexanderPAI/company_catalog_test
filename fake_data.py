@@ -1,8 +1,9 @@
 import asyncio
 import os
+import random
 
 # import random
-from typing import List, Sequence
+from typing import Dict, List
 
 from dotenv import load_dotenv
 from sqlalchemy import select
@@ -320,8 +321,8 @@ companies_data = [
 
 async def create_fake_buildings(
     buildings_data: List[List[str | float]], session: AsyncSession
-) -> Sequence[models.Building]:
-    """Create fake buildings models"""
+) -> None:
+    """Create fake buildings"""
     buildings: List[models.Building] = []
     for building in buildings_data:
         buildings.append(
@@ -333,85 +334,50 @@ async def create_fake_buildings(
         )
     for building_model in buildings:
         session.add(building_model)
+    await session.commit()
+
+
+async def create_fake_activities(
+    activities_data: Dict[str, Dict[str, List[str]]], session: AsyncSession
+) -> None:
+    """Create fake activities"""
+
+    for activity, sub_activity_dict in activities_data.items():
+        activity_model = models.Activity(title=activity)
+        session.add(activity_model)
         await session.flush()
-    result = await session.execute(select(models.Building))
-    return result.scalars().all()
+
+        for sub_activity, double_sub_activity_list in sub_activity_dict.items():
+            sub_activity_model = models.SubActivity(
+                title=sub_activity,
+                activity_id=activity_model.id,
+            )
+            session.add(sub_activity_model)
+            await session.flush()
+
+            for double_sub_activity in double_sub_activity_list:
+                double_sub_activity_model = models.DoubleSubActivity(
+                    title=double_sub_activity,
+                    sub_activity_id=sub_activity_model.id,
+                )
+                session.add(double_sub_activity_model)
+                await session.commit()
 
 
-# def create_fake_activities(activities_data: Dict[str, Dict[str, List[str]]]):
-#     """Create fake activities models"""
-#     activities = []
-#     sub_activities = []
-#     double_sub_activities = []
-#
-#     for activity, sub_activity in activities_data.items():
-#
-#         activity_model = models.Activity(
-#             title=activity,
-#         )
-#         activities.append(activity_model)
-#
-#         sub_activity_model = models.SubActivity(
-#             title=sub_activity,
-#             activity_id=activity_model.id,
-#         )
-#         sub_activities.append(sub_activity_model)
-#
-#         for double_sub_activity in sub_activity:
-#             double_sub_activity_model = models.DoubleSubActivity(
-#                 title=double_sub_activity,
-#                 sub_activity_id=sub_activity_model.id,
-#             )
-#             double_sub_activities.append(double_sub_activity_model)
-#
-#     return activities, sub_activities, double_sub_activities
-#
-#
-# def create_fake_companies(
-#         companies_data: List[str],
-#         buildings: List[models.Building],
-#         phones_data: List[str],
-#         activities: List[models.Activity],
-# ):
-#     """Create fake companies models"""
-#     companies = []
-#     phones = []
-#     company_activities = []
-#     company_sub_activities = []
-#     company_double_sub_activities = []
-#
-#     # 1 ACTIVITY LEVEL
-#     for company in companies_data:
-#         company_model = models.Company(
-#             name=company,
-#             building_id=buildings[random.randint(0, len(buildings)) - 1],
-#         )
-#         company_activity_model = models.CompanyActivity(
-#             activity_id=activities[random.randint(0, len(activities)) - 1],
-#             company_id=company_model.id,
-#         )
-#         print(company_activity_model.__dict__)
-#         company_sub_activity_model = models.CompanySubActivity(
-#             sub_activity_id=company_activity_model.activity.sub_activities[
-#             random.randint(0, len(company_activity_model.activity.sub_activities)) - 1
-#             ],
-#             company_id=company_model.id,
-#         )
-#         company_double_sub_activity_model = models.DoubleSubActivity(
-#             double_sub_activity_id=company_sub_activity_model.sub_activity.double_sub_activities[
-#             random.randint(0, len(company_sub_activity_model.sub_activity.double_sub_activities)) - 1
-#             ],
-#         )
-#         phone_model = models.Phone(
-#             phone=phones_data[random.randint(0, len(phones_data)) - 1],
-#             company_id=company_model.id,
-#         )
-#         companies.append(company_model)
-#         phones.append(phone_model)
-#         company_activities.append(company_activity_model)
-#         company_sub_activities.append(company_sub_activity_model)
-#         company_double_sub_activities.append(company_double_sub_activity_model)
-#     return companies, phones, company_activities, company_sub_activities, company_double_sub_activities
+async def create_fake_companies(
+    companies_data: List[str], session: AsyncSession
+) -> None:
+    """Create fake companies"""
+    buildings = await session.execute(select(models.Building))
+    buildings = buildings.scalars().all()  # type: ignore
+
+    for company in companies_data:
+        company_model = models.Company(
+            name=company,
+            building_id=random.choice(buildings).id,  # type: ignore
+        )
+        session.add(company_model)
+        await session.commit()
 
 
 async def main() -> None:
@@ -421,8 +387,9 @@ async def main() -> None:
         engine, class_=AsyncSession, expire_on_commit=False
     )
     async with async_session() as session:
-        buildings = await create_fake_buildings(buildings_data, session)
-        print(buildings)
+        await create_fake_buildings(buildings_data, session)
+        await create_fake_activities(activities_data, session)
+        await create_fake_companies(companies_data, session)
 
 
 if __name__ == "__main__":
