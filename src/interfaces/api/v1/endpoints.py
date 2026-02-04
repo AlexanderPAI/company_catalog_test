@@ -5,11 +5,39 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from src.infrastructure.db.db_connector import get_session
-from src.infrastructure.db.models.models import Building, Company
+from src.infrastructure.db.models.models import (
+    Building,
+    Company,
+    CompanyActivity,
+    CompanyDoubleSubActivity,
+    CompanySubActivity,
+)
 from src.infrastructure.repositories.db import DBRepository
 from src.interfaces.api.v1.schemes import CompanyScheme
 
 router = APIRouter()
+
+
+@router.get("/company/get_by_activity", response_model=List[CompanyScheme])
+async def get_company_by_activity(  # type: ignore
+    activity: str,
+    session: AsyncSession = Depends(get_session),
+):
+    db_repo = DBRepository(model=Company, session=session)
+    result = await db_repo.list(
+        Company.company_activities.any(CompanyActivity.activity.has(title=activity))
+    )
+    result += await db_repo.list(  # type: ignore
+        Company.company_sub_activities.any(
+            CompanySubActivity.sub_activity.has(title=activity)
+        )
+    )
+    result += await db_repo.list(
+        Company.company_double_sub_activities.any(
+            CompanyDoubleSubActivity.double_sub_activity.has(title=activity)
+        )
+    )
+    return result
 
 
 @router.get("/company/get_by_building", response_model=List[CompanyScheme])
