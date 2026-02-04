@@ -47,7 +47,7 @@ class Company(Base, UUIDMixin, TimestampedMixin):
     phones: Mapped[List["Phone"]] = relationship(
         "Phone", back_populates="company", cascade="all, delete-orphan", lazy="selectin"
     )
-    company_activity: Mapped[List["CompanyActivity"]] = relationship(
+    company_activities: Mapped[List["CompanyActivity"]] = relationship(
         "CompanyActivity", back_populates="company", lazy="selectin"
     )
     company_sub_activities: Mapped[List["CompanySubActivity"]] = relationship(
@@ -128,7 +128,7 @@ class CompanyActivity(Base, UUIDMixin):
         ForeignKey("activities.id"), primary_key=True
     )
     company: Mapped["Company"] = relationship(
-        "Company", back_populates="company_activity", lazy="selectin"
+        "Company", back_populates="company_activities", lazy="selectin"
     )
     activity: Mapped["Activity"] = relationship(
         "Activity", back_populates="company_activities", lazy="selectin"
