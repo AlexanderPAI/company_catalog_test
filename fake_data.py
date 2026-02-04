@@ -428,6 +428,58 @@ async def create_fake_companies(
         )
         session.add(company_double_sub_activity_model)
         await session.flush()
+
+    # Sub Activity level
+    for company in companies_data[10:20]:
+        sub_activities = await session.execute(select(models.SubActivity))
+        sub_activities = sub_activities.scalars().all()  # type: ignore
+
+        sub_activity = random.choice(sub_activities)  # type: ignore
+        double_sub_activity = random.choice(sub_activity.double_sub_activities)
+
+        company_model = models.Company(
+            name=company,
+            building_id=random.choice(buildings).id,  # type: ignore
+        )
+        session.add(company_model)
+        await session.flush()
+
+        company_sub_activity_model = models.CompanySubActivity(
+            company_id=company_model.id,
+            sub_activity_id=sub_activity.id,
+        )
+        session.add(company_sub_activity_model)
+        await session.flush()
+
+        company_double_sub_activity_model = models.CompanyDoubleSubActivity(
+            company_id=company_model.id,
+            double_sub_activity_id=double_sub_activity.id,
+        )
+        session.add(company_double_sub_activity_model)
+        await session.flush()
+
+    # Double Sub Level
+    for company in companies_data[20:30]:
+
+        double_sub_activities = await session.execute(select(models.DoubleSubActivity))
+        double_sub_activities = double_sub_activities.scalars().all()  # type: ignore
+
+        double_sub_activity = random.choice(double_sub_activities)  # type: ignore
+
+        company_model = models.Company(
+            name=company,
+            building_id=random.choice(buildings).id,  # type: ignore
+        )
+        session.add(company_model)
+        await session.flush()
+
+        company_double_sub_activity_model = models.CompanyDoubleSubActivity(
+            company_id=company_model.id,
+            double_sub_activity_id=double_sub_activity.id,
+        )
+        session.add(company_double_sub_activity_model)
+        await session.flush()
+
     await session.commit()
 
 
