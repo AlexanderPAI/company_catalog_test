@@ -316,6 +316,26 @@ companies_data = [
     'ООО "МеталлПромСнаб"',
     'ООО "ФармКонтракт"',
     'ООО "ЛогистикПрофи"',
+    'ООО "ЭнергоСистемы"',
+    'АО "НефтеГазСервис"',
+    'ООО "АгроПромКомплекс"',
+    'ЗАО "ТелекомСвязь"',
+    'ООО "СтройМатериалыПлюс"',
+    'АО "МедицинскиеТехнологии"',
+    'ООО "ИТ-Решения"',
+    'ООО "ТранспортныеСистемы"',
+    'АО "ФинансовыйКонсалтинг"',
+    'ООО "ПищевыеТехнологии"',
+    'ЗАО "ЭкоПром"',
+    'ООО "БытовыеУслуги"',
+    'АО "СтраховаяГруппа"',
+    'ООО "РозничныеСети"',
+    'ООО "ПроизводственныеРесурсы"',
+    'АО "НаучныеРазработки"',
+    'ООО "СпортивныеТехнологии"',
+    'ЗАО "ТуристическиеУслуги"',
+    'ООО "МебельныеКомплексы"',
+    'АО "ОбразовательныеПроекты"',
 ]
 
 
@@ -361,7 +381,8 @@ async def create_fake_activities(
                     sub_activity_id=sub_activity_model.id,
                 )
                 session.add(double_sub_activity_model)
-                await session.commit()
+                await session.flush()
+    await session.commit()
 
 
 async def create_fake_companies(
@@ -371,13 +392,56 @@ async def create_fake_companies(
     buildings = await session.execute(select(models.Building))
     buildings = buildings.scalars().all()  # type: ignore
 
-    for company in companies_data:
+    # Activity level 1
+    for company in companies_data[:10]:
+        activities = await session.execute(select(models.Activity))
+        activities = activities.scalars().all()  # type: ignore
+
+        activity = random.choice(activities)  # type: ignore
+        sub_activity = random.choice(activity.sub_activities)
+        double_sub_activity = random.choice(sub_activity.double_sub_activities)
+
         company_model = models.Company(
             name=company,
             building_id=random.choice(buildings).id,  # type: ignore
         )
         session.add(company_model)
-        await session.commit()
+        await session.flush()
+
+        company_activity_model = models.CompanyActivity(
+            company_id=company_model.id,
+            activity_id=activity.id,
+        )
+        session.add(company_activity_model)
+        await session.flush()
+
+        company_sub_activity_model = models.CompanySubActivity(
+            company_id=company_model.id,
+            sub_activity_id=sub_activity.id,
+        )
+        session.add(company_sub_activity_model)
+        await session.flush()
+
+        company_double_sub_activity_model = models.CompanyDoubleSubActivity(
+            company_id=company_model.id,
+            double_sub_activity_id=double_sub_activity.id,
+        )
+        session.add(company_double_sub_activity_model)
+        await session.flush()
+    await session.commit()
+
+
+async def create_fake_phones(phones_data: List[str], session: AsyncSession) -> None:
+    """Create fake phones"""
+    companies = await session.execute(select(models.Company))
+    companies = companies.scalars().all()  # type: ignore
+    for company in companies:
+        phone_model = models.Phone(
+            phone=random.choice(phones_data),
+            company_id=company.id,
+        )
+        session.add(phone_model)
+    await session.commit()
 
 
 async def main() -> None:
@@ -390,6 +454,7 @@ async def main() -> None:
         await create_fake_buildings(buildings_data, session)
         await create_fake_activities(activities_data, session)
         await create_fake_companies(companies_data, session)
+        await create_fake_phones(phones_data, session)
 
 
 if __name__ == "__main__":
