@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from src.infrastructure.db.db_connector import get_session
@@ -46,13 +46,8 @@ async def get_company_by_building(  # type: ignore
     session: AsyncSession = Depends(get_session),
 ):
     """Get Company by Building"""
-    building_db_repo = DBRepository(model=Building, session=session)
-    building = await building_db_repo.get(address=address)
-    if not building:
-        raise HTTPException(status_code=404, detail="Building not found")
-
-    company_db_repo = DBRepository(model=Company, session=session)
-    companies = await company_db_repo.list(building_id=building.id)
+    db_repo = DBRepository(model=Company, session=session)
+    companies = await db_repo.list(Company.building.has(Building.address == address))
     return companies
 
 
