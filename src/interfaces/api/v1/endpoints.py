@@ -2,7 +2,7 @@ import logging
 import uuid
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
@@ -15,7 +15,9 @@ from src.infrastructure.db.models.app_models import (
     CompanyDoubleSubActivity,
     CompanySubActivity,
 )
+from src.infrastructure.db.models.auth_models import ApiKey
 from src.infrastructure.repositories.db import DBRepository
+from src.interfaces.api.services.check_api_key import check_api_key
 from src.interfaces.api.v1.schemes import CompanyScheme
 
 router = APIRouter()
@@ -158,9 +160,12 @@ async def get_company_by_name(  # type: ignore
     "/company/list", response_model=List[CompanyScheme], response_model_by_alias=True
 )
 async def get_company_list(  # type: ignore
+    api_key: uuid.UUID = Header(...),
     session: AsyncSession = Depends(get_session),
 ):
     """List all companies"""
+    api_repo = DBRepository(model=ApiKey, session=session)
+    await check_api_key(api_repo, api_key)
 
     db_repo = DBRepository(model=Company, session=session)
     result = await db_repo.list()

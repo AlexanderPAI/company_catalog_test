@@ -1,15 +1,13 @@
 import asyncio
 import os
 import random
-
-# import random
 from typing import Dict, List
 
 from dotenv import load_dotenv
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.infrastructure.db.models import app_models
+from src.infrastructure.db.models import app_models, auth_models
 
 load_dotenv()
 
@@ -498,6 +496,15 @@ async def create_fake_phones(phones_data: List[str], session: AsyncSession) -> N
     await session.commit()
 
 
+async def create_default_api_key(session: AsyncSession) -> None:
+    """Create default api key"""
+    api_key = auth_models.ApiKey(
+        key="611534f5-718f-46cc-9ab8-4388811ef41c",
+    )
+    session.add(api_key)
+    await session.commit()
+
+
 async def main() -> None:
     DATABASE_URL = os.environ["DATABASE_URL"]
     engine = create_async_engine(DATABASE_URL)
@@ -509,6 +516,7 @@ async def main() -> None:
         await create_fake_activities(activities_data, session)
         await create_fake_companies(companies_data, session)
         await create_fake_phones(phones_data, session)
+        await create_default_api_key(session)
 
 
 if __name__ == "__main__":

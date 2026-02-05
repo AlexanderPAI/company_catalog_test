@@ -8,9 +8,11 @@ from .app_models import (  # noqa
     Phone,
     SubActivity,
 )
+from .auth_models import ApiKey  # noqf
 from .base import Base  # noqa
 
 __all__ = [
+    "ApiKey",
     "Base",
     "Activity",
     "Company",
