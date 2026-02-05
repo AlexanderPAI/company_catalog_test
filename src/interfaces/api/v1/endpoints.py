@@ -181,7 +181,8 @@ async def get_company_by_name(  # type: ignore
 
 
 @router.get(
-    "/company/list", response_model=List[CompanyScheme], response_model_by_alias=True
+    "/company/list",
+    response_model=List[CompanyScheme],
 )
 async def get_company_list(  # type: ignore
     session: AsyncSession = Depends(get_session),
