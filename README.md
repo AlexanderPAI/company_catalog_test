@@ -72,14 +72,57 @@ Redoc:
 ![](db_diagram.png)
 
 ## Эндпоинты
-- `/v1/company/get_by_area` - получить список компаний в радиусе
-- `/v1/company/get_by_activity` - получить список компаний по виду деятельности (включая подвиды)
-- `/v1/company/get_by_specific_activity` - получить список компаний по виду деятельности (не включая подвиды)
-- `/v1/company/get_by_building` - получить список компаний, расположенных по конкретному адресу (по зданию)
-- `/v1/company/get_by_id` - получить компанию по ID (UUID)
-- `/v1/company/get_by_name` - получить компанию по названию
-- `/v1/company/list` - получить список всех компаний (не входит в ТЗ для проверки загрузки тестовых данных)
+`/v1/company/get_by_area` - получить список компаний в радиусе
 
+```commandline
+curl -X GET "http://127.0.0.1/v1/company/get_by_area?map_lat=55.7520&map_lng=37.6175&radius=5" \
+     -H "api-key: 611534f5-718f-46cc-9ab8-4388811ef41c"
+```
+
+`/v1/company/get_by_activity` - получить список компаний по виду деятельности (включая подвиды)
+
+```commandline
+curl -G "http://127.0.0.1/v1/company/get_by_activity" \
+     --data-urlencode "activity=Разработка ПО" \
+     -H "api-key: 611534f5-718f-46cc-9ab8-4388811ef41c"
+```
+
+`/v1/company/get_by_specific_activity` - получить список компаний по виду деятельности (не включая подвиды)
+```commandline
+curl -G "http://127.0.0.1/v1/company/get_by_activity" \
+     --data-urlencode "activity=Разработка ПО" \
+     -H "api-key: 611534f5-718f-46cc-9ab8-4388811ef41c"
+```
+
+`/v1/company/get_by_building` - получить список компаний, расположенных по конкретному адресу (по зданию)
+
+```commandline
+curl -G "http://127.0.0.1/v1/company/get_by_activity" \
+     --data-urlencode "address=Москва, Братиславская 15 к 1" \
+     -H "api-key: 611534f5-718f-46cc-9ab8-4388811ef41c"
+```
+
+- `/v1/company/get_by_id` - получить компанию по ID (UUID)
+
+```commandline
+curl -X GET "http://127.0.0.1/v1/company/get_by_id?company_id=550e8400-e29b-41d4-a716-446655440000" \
+     -H "api-key: 611534f5-718f-46cc-9ab8-4388811ef41c"
+```
+
+`/v1/company/get_by_name` - получить компанию по названию
+
+```commandline
+curl -G "http://localhost:8000/company/get_by_name" \
+     --data-urlencode 'name=ООО "Аквилон"' \
+     -H "api-key: 123e4567-e89b-12d3-a456-426614174000"
+```
+
+`/v1/company/list` - получить список всех компаний (не входит в ТЗ для проверки загрузки тестовых данных)
+
+```commandline
+curl -X GET "http://127.0.0.1/v1/company/list" \
+     -H "api-key: 611534f5-718f-46cc-9ab8-4388811ef41c"
+```
 
 ## ТЗ
 
