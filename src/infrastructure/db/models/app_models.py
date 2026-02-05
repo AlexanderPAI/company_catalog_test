@@ -2,16 +2,10 @@ import uuid
 from typing import List
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.infrastructure.db.models.base import Base
 from src.infrastructure.db.models.mixins import TimestampedMixin, UUIDMixin
-
-
-class Base(AsyncAttrs, DeclarativeBase):
-    """Base model"""
-
-    __abstract__ = True
 
 
 class Building(Base, UUIDMixin, TimestampedMixin):

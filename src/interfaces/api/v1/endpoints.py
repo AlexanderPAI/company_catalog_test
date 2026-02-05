@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from src.infrastructure.db.db_connector import get_session
-from src.infrastructure.db.models.models import (
+from src.infrastructure.db.models.app_models import (
     Activity,
     Building,
     Company,
