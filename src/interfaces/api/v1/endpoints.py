@@ -3,6 +3,7 @@ import uuid
 from typing import List
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from src.infrastructure.db.db_connector import get_session
@@ -23,6 +24,35 @@ router = APIRouter()
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+
+
+@router.get("/company/get_by_area", response_model=List[CompanyScheme])
+async def get_company_by_area(  # type: ignore
+    map_lat: float,
+    map_lng: float,
+    radius: float,
+    session: AsyncSession = Depends(get_session),
+):
+    """Get_companies_by_radius"""
+    # честно - подсмотрел как делается
+    db_repo = DBRepository(model=Company, session=session)
+
+    Building = Company.building.property.mapper.class_
+
+    EARTH_RADIUS = 6371
+
+    distance_expr = EARTH_RADIUS * func.acos(
+        func.cos(func.radians(map_lat))
+        * func.cos(func.radians(Building.latitude))
+        * func.cos(func.radians(Building.longitude) - func.radians(map_lng))
+        + func.sin(func.radians(map_lat)) * func.sin(func.radians(Building.latitude))
+    )
+
+    building_subquery = select(Building.id).where(distance_expr <= radius).subquery()
+
+    result = await db_repo.list(Company.building_id.in_(select(building_subquery.c.id)))
+
+    return result
 
 
 @router.get("/company/get_by_activity", response_model=List[CompanyScheme])
