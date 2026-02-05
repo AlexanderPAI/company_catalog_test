@@ -7,9 +7,6 @@ services:
       dockerfile: src/backend.dockerfile
     env_file:
       - .env
-#    ports:
-#      - "8080:8080" # TODO убрать после добавления nginx
-#      - "443:443"
     volumes:
       - ./src/infrastructure/db/alembic/versions:/app/src/infrastructure/db/alembic/versions:delegated
     depends_on:
@@ -21,8 +18,6 @@ services:
   db:
     container_name: company_catalog_db
     image: postgres:17
-#    ports:
-#      - "5432:5432" # TODO убрать после добавления nginx
     volumes:
       - postgres_data:/var/lib/postgresql/data:rw
     env_file:
