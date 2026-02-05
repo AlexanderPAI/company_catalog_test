@@ -1,7 +1,7 @@
 .PHONY: build up test
 
 build:
-	docker-compose build
+	docker compose build
 
 up:
-	docker-compose up
+	docker compose up
