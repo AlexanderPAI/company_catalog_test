@@ -2,12 +2,12 @@ import logging
 import uuid
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from src.infrastructure.db.db_connector import get_session
-from src.infrastructure.db.models.models import (
+from src.infrastructure.db.models.app_models import (
     Activity,
     Building,
     Company,
@@ -15,7 +15,9 @@ from src.infrastructure.db.models.models import (
     CompanyDoubleSubActivity,
     CompanySubActivity,
 )
+from src.infrastructure.db.models.auth_models import ApiKey
 from src.infrastructure.repositories.db import DBRepository
+from src.interfaces.api.services.check_api_key import check_api_key
 from src.interfaces.api.v1.schemes import CompanyScheme
 
 router = APIRouter()
@@ -32,8 +34,12 @@ async def get_company_by_area(  # type: ignore
     map_lng: float,
     radius: float,
     session: AsyncSession = Depends(get_session),
+    api_key: uuid.UUID = Header(...),
 ):
     """Get_companies_by_radius"""
+    api_repo = DBRepository(model=ApiKey, session=session)
+    await check_api_key(api_repo, api_key)
+
     # честно - подсмотрел как делается
     db_repo = DBRepository(model=Company, session=session)
 
@@ -59,8 +65,12 @@ async def get_company_by_area(  # type: ignore
 async def get_company_activity_all(  # type: ignore
     activity: str,
     session: AsyncSession = Depends(get_session),
+    api_key: uuid.UUID = Header(...),
 ):
     """Get all companies activities (subactivities, double subactivities)"""
+    api_repo = DBRepository(model=ApiKey, session=session)
+    await check_api_key(api_repo, api_key)
+
     act_repo = DBRepository(model=Activity, session=session)
     db_repo = DBRepository(model=Company, session=session)
 
@@ -102,8 +112,12 @@ async def get_company_activity_all(  # type: ignore
 async def get_company_by_activity(  # type: ignore
     activity: str,
     session: AsyncSession = Depends(get_session),
+    api_key: uuid.UUID = Header(...),
 ):
     """Get company by activity"""
+    api_repo = DBRepository(model=ApiKey, session=session)
+    await check_api_key(api_repo, api_key)
+
     db_repo = DBRepository(model=Company, session=session)
     result = await db_repo.list(
         Company.company_activities.any(CompanyActivity.activity.has(title=activity))
@@ -125,8 +139,12 @@ async def get_company_by_activity(  # type: ignore
 async def get_company_by_building(  # type: ignore
     address: str,
     session: AsyncSession = Depends(get_session),
+    api_key: uuid.UUID = Header(...),
 ):
     """Get Company by Building"""
+    api_repo = DBRepository(model=ApiKey, session=session)
+    await check_api_key(api_repo, api_key)
+
     db_repo = DBRepository(model=Company, session=session)
     companies = await db_repo.list(Company.building.has(Building.address == address))
     return companies
@@ -136,8 +154,12 @@ async def get_company_by_building(  # type: ignore
 async def get_company_by_uuid(  # type: ignore
     company_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
+    api_key: uuid.UUID = Header(...),
 ):
     """Get Company by ID"""
+    api_repo = DBRepository(model=ApiKey, session=session)
+    await check_api_key(api_repo, api_key)
+
     db_repo = DBRepository(model=Company, session=session)
     company = await db_repo.get(id=company_id)
     return company
@@ -147,8 +169,12 @@ async def get_company_by_uuid(  # type: ignore
 async def get_company_by_name(  # type: ignore
     name: str,
     session: AsyncSession = Depends(get_session),
+    api_key: uuid.UUID = Header(...),
 ):
     """Get Company by Name"""
+    api_repo = DBRepository(model=ApiKey, session=session)
+    await check_api_key(api_repo, api_key)
+
     db_repo = DBRepository(model=Company, session=session)
     company = await db_repo.get(name=name)
     return company
@@ -159,8 +185,11 @@ async def get_company_by_name(  # type: ignore
 )
 async def get_company_list(  # type: ignore
     session: AsyncSession = Depends(get_session),
+    api_key: uuid.UUID = Header(...),
 ):
     """List all companies"""
+    api_repo = DBRepository(model=ApiKey, session=session)
+    await check_api_key(api_repo, api_key)
 
     db_repo = DBRepository(model=Company, session=session)
     result = await db_repo.list()
