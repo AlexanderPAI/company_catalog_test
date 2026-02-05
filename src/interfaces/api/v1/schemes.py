@@ -8,19 +8,21 @@ from pydantic import BaseModel, ConfigDict, Field
 class CompanyScheme(BaseModel):
     """Company scheme"""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     id: uuid.UUID = Field(..., title="ID")
     name: str = Field(..., title="Company Name")
     building: "BuildingScheme" = Field(..., title="Company Building")
     phones: Optional[List["PhoneScheme"]] = Field(None, title="Company Phones")
     company_activities: Optional[List["CompanyActivityScheme"]] = Field(
-        None, title="Company Activities"
+        None, title="Company Activities", alias="activities"
     )
     company_sub_activities: Optional[List["CompanySubActivityScheme"]] = Field(
-        None, title="Company Sub Activities"
+        None, title="Company Sub Activities", alias="sub_activities"
     )
     company_double_sub_activities: Optional[List["CompanyDoubleSubActivityScheme"]] = (
-        Field(None, title="Company Double Sub Activities")
+        Field(
+            None, title="Company Double Sub Activities", alias="double_sub_activities"
+        )
     )
 
 
